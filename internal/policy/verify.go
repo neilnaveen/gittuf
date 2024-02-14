@@ -410,23 +410,6 @@ func VerifyTag(ctx context.Context, repo *git.Repository, ids []string) map[stri
 			continue
 		}
 
-		tagRef, err := repo.Tag(strings.Trim(absPath, "refs/tags"))
-		if err != nil {
-			status[id] = err.Error()
-			continue
-		}
-
-		tagObj, err := gitinterface.GetTag(repo, tagRef.Hash())
-
-		if err != nil {
-			status[id] = err.Error()
-			continue
-		}
-
-		if entry.TargetID != tagObj.Target {
-			status[id] = fmt.Sprintf("verifying RSL entry failed, %s", ErrUnauthorizedSignature.Error())
-		}
-
 		policyEntry, _, err := rsl.GetLatestReferenceEntryForRefBefore(repo, PolicyRef, entry.ID)
 		if err != nil {
 			status[id] = fmt.Sprintf(unableToLoadPolicyMessageFmt, err.Error())
@@ -697,6 +680,14 @@ func verifyTagEntry(ctx context.Context, repo *git.Repository, policy *State, en
 		// Likely indicates the ref is not pointing to a tag object
 		// What about lightweight tags?
 		return err
+	}
+
+	if entry.TargetID != tagObj.Target && entry.TargetID != tagObj.Hash {
+		return fmt.Errorf("verifying RSL entry failed, %s", ErrUnauthorizedSignature.Error())
+	}
+
+	if strings.Trim(entry.RefName, "refs/tags") != tagObj.Name {
+		return fmt.Errorf("verifying RSL entry failed, tag name has been changed")
 	}
 
 	if len(tagObj.PGPSignature) == 0 {
