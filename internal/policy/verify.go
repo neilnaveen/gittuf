@@ -686,7 +686,7 @@ func verifyTagEntry(ctx context.Context, repo *git.Repository, policy *State, en
 		return fmt.Errorf("verifying RSL entry failed, %s", ErrUnauthorizedSignature.Error())
 	}
 
-	if strings.Trim(entry.RefName, "refs/tags") != tagObj.Name {
+	if entry.RefName != "refs/tags/"+tagObj.Name {
 		return fmt.Errorf("verifying RSL entry failed, tag name has been changed")
 	}
 
