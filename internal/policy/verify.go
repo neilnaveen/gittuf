@@ -682,12 +682,12 @@ func verifyTagEntry(ctx context.Context, repo *git.Repository, policy *State, en
 		return err
 	}
 
-	if entry.TargetID != tagObj.Target && entry.TargetID != tagObj.Hash {
+	if entry.TargetID != tagObj.Hash && entry.TargetID != tagObj.Target {
 		return fmt.Errorf("verifying RSL entry failed, %s", ErrUnauthorizedSignature.Error())
 	}
 
-	if entry.RefName != "refs/tags/"+tagObj.Name {
-		return fmt.Errorf("verifying RSL entry failed, tag name has been changed")
+	if plumbing.NewTagReferenceName(entry.RefName).String() != tagObj.Name {
+		return fmt.Errorf("verifying RSL entry failed, tag name does not match expected tag name from RSL entry")
 	}
 
 	if len(tagObj.PGPSignature) == 0 {
